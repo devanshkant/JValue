@@ -45,6 +45,38 @@ substitutions appear in the main list. Future substitutions are listed separatel
 
 ---
 
+### 3. JSON Value Model — Jackson `JsonNode` / Gson `JsonElement` → Sealed Interface Hierarchy
+
+**Normally:** Jackson's `com.fasterxml.jackson.databind.JsonNode` tree model or Gson's `com.google.gson.JsonElement`.
+
+**Instead:** A sealed `JsonValue` interface hierarchy using sealed interfaces (Java 17+) with concrete types `JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBoolean`, `JsonNull`.
+
+**How:** Java's sealed types enforce at compile time that all JSON value kinds are handled exhaustively. Pattern matching in `switch` expressions (Java 21+) enables clean dispatch without `instanceof` chains.
+
+**JDK APIs used:** `sealed`, `permits` (Java language features).
+
+**Verifiable in:** [`src/main/java/com/jvalue/JsonValue.java`](src/main/java/com/jvalue/JsonValue.java)
+
+**Tradeoff:** The sealed hierarchy is more type-safe than Jackson's `JsonNode` but does not support Jackson's `ObjectMapper` deserialization into POJOs.
+
+---
+
+### 4. Ordered Key-Value Store — Guava `ImmutableMap` → `java.util.LinkedHashMap`
+
+**Normally:** `com.google.common.collect.ImmutableMap` from Guava.
+
+**Instead:** `java.util.Collections.unmodifiableMap()` wrapping a `java.util.LinkedHashMap`.
+
+**How:** `JsonObject` uses `LinkedHashMap` internally to preserve key insertion order (crucial for predictable JSON serialization), and exposes it via `Collections.unmodifiableMap()` to prevent external mutation after parsing.
+
+**JDK APIs used:** `java.util.LinkedHashMap`, `java.util.Collections.unmodifiableMap()`.
+
+**Verifiable in:** [`src/main/java/com/jvalue/JsonObject.java`](src/main/java/com/jvalue/JsonObject.java)
+
+**Tradeoff:** `Collections.unmodifiableMap()` wraps the original map (not a true copy) but since the toolkit controls the internal map's reference, safety is guaranteed.
+
+---
+
 ## Planned Substitutions - NOT IMPLEMENTED
 
 The following substitutions are planned but not yet implemented. They will be moved to the main
@@ -54,10 +86,8 @@ These entries are planning notes only. They are not implemented, do not constitu
 | # | What | Replaces | JDK API |
 |---|---|---|---|
 | 3 | JSON parsing | Jackson / Gson | `java.io.Reader`, `java.lang.Character`, `java.lang.StringBuilder` |
-| 4 | JSON value model | Jackson `JsonNode` / Gson `JsonElement` | Sealed interfaces (Java 17+), pattern matching (Java 21+)
 | 5 | JSON serialization | Jackson `JsonGenerator` / Gson `JsonWriter` | `java.lang.StringBuilder`, `java.io.Writer` 
 | 6 | File I/O | Apache Commons IO | `java.nio.file.Files`, `java.nio.file.Path`
-| 7 | Ordered key-value store | Guava `ImmutableMap` | `java.util.LinkedHashMap`, `Collections.unmodifiableMap()`
 | 8 | Data carrier objects | Lombok `@Value` | Java records (Java 16+)
 | 9 | JSON Pointer (RFC 6901) | Jackson `JsonPointer` / `json-pointer` lib | `String.split()`, `Integer.parseInt()`, `String.replace()`
 | 10 | Pretty printing | Jackson `DefaultPrettyPrinter` / Gson `setPrettyPrinting()` | `java.lang.StringBuilder`, depth counter 
