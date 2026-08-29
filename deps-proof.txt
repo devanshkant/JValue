@@ -1,0 +1,21 @@
+[JValue] Compiling main sources...
+[OK] Build complete.
+
+=== JValue Dependency Proof ===
+
+-- Java version --
+java 25.0.4 2026-07-21 LTS
+Java(TM) SE Runtime Environment (build 25.0.4+7-LTS-189)
+Java HotSpot(TM) 64-Bit Server VM (build 25.0.4+7-LTS-189, mixed mode, sharing)
+
+-- jdeps module analysis (machine-verifiable) --
+classes -> java.base
+   com.jvalue                                         -> java.lang                                          java.base
+
+-- Summary --
+Build tool: javac (JDK built-in)
+Runtime: java (JDK built-in)
+Third-party dependencies: NONE
+All class files depend only on java.base (confirmed by jdeps above)
+
+=== Proof complete ===
