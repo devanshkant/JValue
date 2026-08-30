@@ -1,5 +1,7 @@
 package com.jvalue.test;
 
+import com.jvalue.JsonSerializerTest;
+
 /**
  * Test runner for JValue.
  *
@@ -25,7 +27,10 @@ public final class TestRunner {
         JsonParserTest.runAll();
         JsonFileApiTest.runAll();
         JsonPointerTest.runAll();
-        com.jvalue.JsonSerializerTest.runAll();
+        JsonSerializerTest.runAll();
+        JsonRoundTripTest.runAll();
+        JsonIntegrationTest.runAll();
+        JsonStressTest.runAll();
         JsonConformanceTest.runAll();
 
         System.out.println();
@@ -56,9 +61,10 @@ public final class TestRunner {
         } catch (AssertionError e) {
             failed++;
             System.out.printf("  FAIL  %s: %s%n", name, e.getMessage());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             errors++;
             System.out.printf("  ERROR %s: %s%n", name, e.toString());
+            e.printStackTrace(System.out);
         }
     }
 
@@ -112,13 +118,14 @@ public final class TestRunner {
     public static void assertThrows(Class<? extends Throwable> expectedType, Runnable action) {
         try {
             action.run();
-            throw new AssertionError("expected " + expectedType.getSimpleName() + " but nothing was thrown");
         } catch (Throwable t) {
             if (!expectedType.isInstance(t)) {
                 throw new AssertionError(
                     "expected " + expectedType.getSimpleName() + " but got " + t.getClass().getSimpleName() + ": " + t.getMessage());
             }
+            return;
         }
+        throw new AssertionError("expected " + expectedType.getSimpleName() + " but nothing was thrown");
     }
 
     // --- Smoke test ---

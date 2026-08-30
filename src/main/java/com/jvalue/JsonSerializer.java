@@ -162,6 +162,9 @@ final class JsonSerializer {
 
     private static boolean isValidJsonNumber(String raw) {
         int length = raw.length();
+        if (length == 0) {
+            return false;
+        }
         int index = 0;
 
         if (raw.charAt(index) == '-') {

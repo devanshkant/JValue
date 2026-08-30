@@ -1,7 +1,6 @@
 package com.jvalue.test;
 
 import com.jvalue.Json;
-import com.jvalue.JsonArray;
 import com.jvalue.JsonNull;
 import com.jvalue.JsonPointer;
 import com.jvalue.JsonValue;
