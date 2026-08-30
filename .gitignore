@@ -16,3 +16,6 @@ extra/
 # OS files
 .DS_Store
 Thumbs.db
+
+# JSONTestSuite upstream corpus (downloaded during setup, not committed)
+test-data/JSONTestSuite/

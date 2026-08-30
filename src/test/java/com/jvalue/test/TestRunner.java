@@ -22,6 +22,8 @@ public final class TestRunner {
         // Test classes will be registered here as they are created
         runTest("Smoke test", TestRunner::smokeTest);
         JsonValueTest.runAll();
+        JsonParserTest.runAll();
+        JsonConformanceTest.runAll();
 
         System.out.println();
         System.out.println("=== Results ===");

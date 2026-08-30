@@ -39,6 +39,9 @@ cmd_test() {
     fi
 
     $JAVAC $JAVAC_OPTS -cp "$MAIN_OUT" -d "$TEST_OUT" $TEST_SRCS
+    echo "[JValue] Fetching JSONTestSuite corpus (if needed)..."
+    $JAVA -cp "$MAIN_OUT:$TEST_OUT" com.jvalue.test.FetchCorpus
+    
     echo "[JValue] Running tests..."
     $JAVA -cp "$MAIN_OUT:$TEST_OUT" com.jvalue.test.TestRunner
     echo "[OK] All tests passed."

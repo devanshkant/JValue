@@ -71,6 +71,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo [JValue] Fetching JSONTestSuite corpus (if needed)...
+%JAVA% -cp "%MAIN_OUT%;%TEST_OUT%" com.jvalue.test.FetchCorpus
+
 echo [JValue] Running tests...
 %JAVA% -cp "%MAIN_OUT%;%TEST_OUT%" com.jvalue.test.TestRunner
 if errorlevel 1 (
