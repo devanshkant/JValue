@@ -1,26 +1,45 @@
 # JValue - Zero-Dependency JSON Toolkit for Java 25
 
-> The JSON parser the JDK does not ship.
+> A small JSON parser and serializer for Java, built with only the JDK.
 
-JValue is a lightweight, dependency-free JSON toolkit for Java 25, built for
-ZeroDepsHack 2026 Track B: Parsers & Data Formats.
+JValue is a lightweight JSON toolkit for Java 25, built for ZeroDepsHack 2026
+Track B: Parsers & Data Formats. It provides an explicit JSON value model,
+strict RFC 8259 parsing, compact serialization, and fixed-format pretty
+serialization without Jackson, Gson, Maven, Gradle, or any third-party runtime
+dependency.
 
-## Current Features
-
-- Parsing: RFC 8259 JSON parser with detailed errors: line, column, and offset.
-- JSON value model: sealed hierarchy for object, array, string, number, boolean, and null.
-- Number fidelity: JSON numbers preserve their original lexical representation.
-- Validation coverage: hand-written unit tests plus JSONTestSuite conformance checks.
-
-Planned future phases include serialization, JSON Pointer, and file I/O. They are not implemented yet.
-
-All current production code uses only the Java standard library. No Jackson. No Gson. No dependencies.
+It is not intended to replace the full feature set of Jackson or Gson. The goal
+is a focused, dependency-free tree parser and serializer for lightweight JSON
+workloads.
 
 ## Why
 
-Java's standard library does not provide a JSON implementation. Java developers commonly add
-third-party dependencies such as Jackson or Gson for parsing and serialization. JValue implements
-the core JSON tree parser by hand with JDK APIs only.
+Java's standard library does not include a JSON implementation. Java developers
+usually add third-party dependencies such as Jackson or Gson for parsing,
+serialization, and JSON tree handling. JValue implements that core tree workflow
+by hand using Java 25 and standard JDK APIs only.
+
+## Requirements
+
+- Java 25 LTS.
+- Tested with JDK 25.0.4.
+- No third-party production dependencies.
+
+## Current Features
+
+- RFC 8259 JSON parsing from `String`.
+- JSON value model: `JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`,
+  `JsonBoolean`, and `JsonNull`.
+- Detailed parse diagnostics through `JsonParseException`: line, column, and
+  character offset.
+- Strict string handling: JSON escapes, Unicode escapes, control character
+  rejection, and surrogate-pair validation.
+- Strict number grammar with raw lexical preservation.
+- Compact serialization with `Json.stringify(...)`.
+- Pretty serialization with `Json.stringifyPretty(...)`.
+- Appendable-based output with `Json.write(...)` and `Json.writePretty(...)`.
+- Object iteration order preservation for predictable serialization.
+- Hand-written tests plus JSONTestSuite conformance coverage.
 
 ## Quick Start
 
@@ -31,7 +50,7 @@ JsonValue value = Json.parse("""
     {
         "name": "JValue",
         "version": 1,
-        "features": ["parsing", "value-model", "error-reporting"],
+        "features": ["parse", "stringify", "pretty"],
         "zeroDeps": true
     }
     """);
@@ -42,15 +61,76 @@ int version = obj.getInt("version");           // 1
 boolean zeroDeps = obj.getBoolean("zeroDeps"); // true
 String firstFeature = obj.getArray("features").getString(0);
 
-JsonObject built = JsonObject.of(
+String compact = Json.stringify(value);
+String pretty = Json.stringifyPretty(value);
+```
+
+## Serialization
+
+Compact output:
+
+```java
+JsonValue value = JsonObject.of(
     "tool", JsonValue.of("JValue"),
     "deps", JsonValue.of(0)
 );
+
+String json = Json.stringify(value);
+// {"tool":"JValue","deps":0}
 ```
 
-## Build & Run
+Pretty output uses two-space indentation and no trailing newline:
 
-Requirements: Java 25 LTS, tested with JDK 25.0.4.
+```java
+String pretty = Json.stringifyPretty(value);
+// {
+//   "tool": "JValue",
+//   "deps": 0
+// }
+```
+
+For caller-owned output sinks, use `Appendable`:
+
+```java
+StringBuilder out = new StringBuilder();
+Json.write(value, out);
+
+StringBuilder prettyOut = new StringBuilder();
+Json.writePretty(value, prettyOut);
+```
+
+Numbers are serialized from `JsonNumber.raw()` so parsed numeric spellings such
+as `-0`, `1.0`, `1e0`, and `1E0` are preserved.
+
+## Error Handling
+
+Invalid JSON throws `JsonParseException`, which exposes `line()`, `column()`,
+and `offset()`:
+
+```java
+try {
+    Json.parse("{\"missing\": [1, 2}");
+} catch (JsonParseException e) {
+    System.out.println(e.getMessage());
+    System.out.println(e.line());
+    System.out.println(e.column());
+    System.out.println(e.offset());
+}
+```
+
+Serialization throws `NullPointerException` for Java `null` inputs and
+`IllegalArgumentException` if a manually constructed value contains invalid
+internal state, such as an invalid raw number or a lone surrogate code unit in a
+string.
+
+## Supported JSON Behavior
+
+JValue supports JSON objects, arrays, strings, numbers, booleans, null, JSON
+whitespace, nested values, escape sequences, Unicode escapes, strict number
+grammar, duplicate object keys with last-value-wins semantics, and a nesting
+depth limit of 512.
+
+## Build & Run
 
 ```bash
 # Build
@@ -68,38 +148,39 @@ build.bat deps-proof    # Windows
 
 No Maven. No Gradle. Just `javac`.
 
+## Testing
+
+Tests use a hand-written harness because the JDK does not ship JUnit. The suite
+covers the value model, parser edge cases, error positions, depth limits,
+serialization, pretty printing, Appendable output, round trips, and the
+JSONTestSuite `test_parsing` corpus when present locally.
+
+Current verified results:
+
+- Hand-written tests: 121 passed, 0 failed, 0 errors.
+- JSONTestSuite: 305 passed, 0 failed, 13 skipped.
+
+The skipped JSONTestSuite cases are byte-level encoding cases that are not
+applicable to the current `String`-based parser.
+
 ## Dependency Verification
 
 This project has zero third-party production dependencies.
 
 1. There is no `pom.xml`, `build.gradle`, or runtime dependency manifest.
 2. Production source uses only JDK APIs.
-3. Run `build.bat deps-proof` or `./build.sh deps-proof` to confirm.
-4. See [deps-proof.txt](deps-proof.txt) for recorded proof output.
-
-## Supported JSON Behavior
-
-Current parser behavior includes objects, arrays, strings, numbers, booleans, null, JSON whitespace,
-nested values, escape sequences, Unicode escapes, strict number grammar, duplicate object keys with
-last-value-wins semantics, and a nesting depth limit of 512.
-
-## Error Handling
-
-Invalid JSON throws `JsonParseException`, which exposes `line()`, `column()`, and `offset()` in
-addition to a human-readable message.
-
-## Testing
-
-Tests use a hand-written harness because the JDK does not ship JUnit. The suite covers the value
-model, parser edge cases, error positions, depth limits, and the JSONTestSuite `test_parsing`
-corpus when present locally.
+3. Run `build.bat deps-proof` or `./build.sh deps-proof`.
+4. `jdeps` confirms the production classes depend only on `java.base`.
+5. See [deps-proof.txt](deps-proof.txt) for recorded proof output.
 
 ## Limitations
 
-- Serialization is not implemented yet.
-- JSON Pointer is not implemented yet.
-- File I/O convenience APIs are not implemented yet.
-- The parser currently accepts `String` input only.
+- JSON Pointer is not implemented.
+- Production file I/O convenience APIs are not implemented.
+- Reader/InputStream parsing is not implemented.
+- Parsing currently accepts `String` input only.
+- Serialization is tree-based, not streaming from arbitrary Java objects.
+- There is no POJO binding, schema validation, comments, JSON5, YAML, or TOML.
 
 ## STDLIB.md
 

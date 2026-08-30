@@ -1,5 +1,7 @@
 package com.jvalue;
 
+import java.io.IOException;
+
 /**
  * JValue — Zero-Dependency JSON Toolkit for Java 25.
  *
@@ -36,6 +38,56 @@ public final class Json {
         CharSource source = new CharSource(json);
         JsonParser parser = new JsonParser(source);
         return parser.parseDocument();
+    }
+
+    /**
+     * Serializes a JSON value to compact JSON text.
+     *
+     * @param value the value to serialize
+     * @return compact JSON text
+     * @throws NullPointerException if value is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static String stringify(JsonValue value) {
+        return JsonSerializer.serialize(value);
+    }
+
+    /**
+     * Writes a JSON value as compact JSON text to an {@link Appendable}.
+     *
+     * @param value the value to serialize
+     * @param out the destination appendable
+     * @throws IOException if the appendable fails while writing
+     * @throws NullPointerException if value or out is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static void write(JsonValue value, Appendable out) throws IOException {
+        JsonSerializer.write(value, out);
+    }
+
+    /**
+     * Serializes a JSON value to human-readable JSON text.
+     *
+     * @param value the value to serialize
+     * @return pretty-printed JSON text with two-space indentation
+     * @throws NullPointerException if value is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static String stringifyPretty(JsonValue value) {
+        return JsonSerializer.serializePretty(value);
+    }
+
+    /**
+     * Writes a JSON value as human-readable JSON text to an {@link Appendable}.
+     *
+     * @param value the value to serialize
+     * @param out the destination appendable
+     * @throws IOException if the appendable fails while writing
+     * @throws NullPointerException if value or out is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static void writePretty(JsonValue value, Appendable out) throws IOException {
+        JsonSerializer.writePretty(value, out);
     }
 
     /**
