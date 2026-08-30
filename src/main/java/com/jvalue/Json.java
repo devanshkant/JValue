@@ -22,6 +22,23 @@ public final class Json {
     }
 
     /**
+     * Parses a JSON string into a {@link JsonValue}.
+     *
+     * <p>Accepts any valid JSON value as the root: objects, arrays, strings,
+     * numbers, booleans, and null are all valid JSON documents per RFC 8259.</p>
+     *
+     * @param json the JSON text to parse
+     * @return the parsed JSON value
+     * @throws JsonParseException if the input is not valid JSON
+     * @throws NullPointerException if json is null
+     */
+    public static JsonValue parse(String json) {
+        CharSource source = new CharSource(json);
+        JsonParser parser = new JsonParser(source);
+        return parser.parseDocument();
+    }
+
+    /**
      * Returns the library name and version.
      */
     public static String version() {
