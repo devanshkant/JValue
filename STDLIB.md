@@ -77,26 +77,59 @@ substitutions appear in the main list. Future substitutions are listed separatel
 
 ---
 
+### 5. JSON Parsing — Jackson `ObjectMapper` / Gson `JsonParser` → Hand-Written Recursive-Descent Parser
+
+**Normally:** `com.fasterxml.jackson.databind.ObjectMapper.readTree()` or `com.google.gson.JsonParser.parseString()` for parsing JSON text into a tree model.
+
+**Instead:** A hand-written recursive-descent parser implementing the full RFC 8259 JSON grammar.
+
+**How:** `CharSource` wraps a `String` input and provides character-by-character access with line/column/offset tracking. `JsonParser` implements one method per JSON production rule (`parseValue`, `parseString`, `parseNumber`, `parseArray`, `parseObject`, `parseNull`, `parseBoolean`). The parser handles all RFC 8259 escape sequences, Unicode escapes with surrogate pair validation, strict number grammar enforcement, nesting depth limits (512 levels), and detailed error reporting with position information.
+
+**JDK APIs used:** `java.lang.String`, `java.lang.Character` (surrogate detection), `java.lang.StringBuilder`, `java.util.ArrayList`, `java.util.LinkedHashMap`.
+
+**Verifiable in:** [`src/main/java/com/jvalue/JsonParser.java`](src/main/java/com/jvalue/JsonParser.java), [`src/main/java/com/jvalue/CharSource.java`](src/main/java/com/jvalue/CharSource.java), [`src/main/java/com/jvalue/JsonParseException.java`](src/main/java/com/jvalue/JsonParseException.java)
+
+**Tradeoff:** No streaming/incremental parsing (Phase 7 candidate). No `Reader`-based input yet (Phase 6). Handles only `String` input. Does not support POJO deserialization like Jackson's `ObjectMapper`. The parser is strict RFC 8259: it rejects lone surrogates, unescaped control characters, leading zeros, and trailing data.
+
+---
+
+### 6. Unicode Escape Handling — ICU4J → `java.lang.Character`
+
+**Normally:** ICU4J (`com.ibm.icu.lang.UCharacter`) or similar libraries for Unicode-aware character processing.
+
+**Instead:** `java.lang.Character` static methods for surrogate pair handling.
+
+**How:** The JSON string parser validates `\uXXXX` escape sequences by checking for high/low surrogates using `Character.isHighSurrogate()`, `Character.isLowSurrogate()`, and assembling code points via `Character.toCodePoint()` and `Character.toChars()`. Unescaped control characters (U+0000–U+001F) are detected via direct char comparison.
+
+**JDK APIs used:** `java.lang.Character.isHighSurrogate()`, `java.lang.Character.isLowSurrogate()`, `java.lang.Character.toCodePoint()`, `java.lang.Character.toChars()`.
+
+**Verifiable in:** [`src/main/java/com/jvalue/JsonParser.java`](src/main/java/com/jvalue/JsonParser.java) (method `parseUnicodeEscape`)
+
+**Tradeoff:** No normalization (NFC/NFD), no grapheme cluster support. Sufficient for JSON string parsing per RFC 8259.
+
+---
+
+
 ## Planned Substitutions - NOT IMPLEMENTED
 
 The following substitutions are planned but not yet implemented. They will be moved to the main
 list as each feature is completed and verifiable in source.
-These entries are planning notes only. They are not implemented, do not constitute evidence of completed work, and must not be counted toward any hackathon bonus until implemented.
+These entries are planning notes only. They are not implemented, do not constitute evidence of completed work, and must not be counted toward any hackathon bonus unless implemented.
 
 | # | What | Replaces | JDK API |
 |---|---|---|---|
-| 3 | JSON parsing | Jackson / Gson | `java.io.Reader`, `java.lang.Character`, `java.lang.StringBuilder` |
-| 5 | JSON serialization | Jackson `JsonGenerator` / Gson `JsonWriter` | `java.lang.StringBuilder`, `java.io.Writer` 
-| 6 | File I/O | Apache Commons IO | `java.nio.file.Files`, `java.nio.file.Path`
-| 8 | Data carrier objects | Lombok `@Value` | Java records (Java 16+)
-| 9 | JSON Pointer (RFC 6901) | Jackson `JsonPointer` / `json-pointer` lib | `String.split()`, `Integer.parseInt()`, `String.replace()`
-| 10 | Pretty printing | Jackson `DefaultPrettyPrinter` / Gson `setPrettyPrinting()` | `java.lang.StringBuilder`, depth counter 
+| 8 | JSON serialization | Jackson `JsonGenerator` / Gson `JsonWriter` | `java.lang.StringBuilder`, `java.io.Writer` 
+| 9 | File I/O | Apache Commons IO | `java.nio.file.Files`, `java.nio.file.Path`
+| 10 | Data carrier objects | Lombok `@Value` | Java records (Java 16+)
+| 11 | JSON Pointer (RFC 6901) | Jackson `JsonPointer` / `json-pointer` lib | `String.split()`, `Integer.parseInt()`, `String.replace()`
+| 12 | Pretty printing | Jackson `DefaultPrettyPrinter` / Gson `setPrettyPrinting()` | `java.lang.StringBuilder`, depth counter 
 
-> **Note on `HexFormat`:** `java.util.HexFormat` (Java 17+) may be used during Unicode escape parsing
-> (`\uXXXX`) in the JSON parser. This entry will be added if and when `HexFormat` is genuinely and
-> meaningfully used in the implementation, not merely because it is available.
+> **Note on `HexFormat`:** `java.util.HexFormat` (Java 17+) was considered for Unicode escape parsing
+> but the implementation uses direct hex digit conversion via a custom `hexDigit(char)` method, which
+> is simpler and avoids unnecessary object allocation. This does not warrant a STDLIB entry.
 
 ---
 
 *This document is maintained continuously during development. Every substitution in the main list
 is implemented and verifiable in the current source code.*
+
