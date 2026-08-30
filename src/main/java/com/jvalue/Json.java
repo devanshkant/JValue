@@ -1,6 +1,11 @@
 package com.jvalue;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * JValue — Zero-Dependency JSON Toolkit for Java 25.
@@ -41,6 +46,41 @@ public final class Json {
     }
 
     /**
+     * Reads a UTF-8 JSON file into a {@link JsonValue}.
+     *
+     * <p>This is a convenience wrapper around {@link Files#readString(Path, Charset)}
+     * and {@link #parse(String)}. It preserves the parser's normal input policy.</p>
+     *
+     * @param path the file to read
+     * @return the parsed JSON value
+     * @throws IOException if reading fails
+     * @throws JsonParseException if the file content is not valid JSON
+     * @throws NullPointerException if path is null
+     */
+    public static JsonValue read(Path path) throws IOException {
+        return read(path, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Reads a JSON file with the given charset into a {@link JsonValue}.
+     *
+     * <p>This is a convenience wrapper around {@link Files#readString(Path, Charset)}
+     * and {@link #parse(String)}. It preserves the parser's normal input policy.</p>
+     *
+     * @param path the file to read
+     * @param charset the charset used to decode the file
+     * @return the parsed JSON value
+     * @throws IOException if reading fails
+     * @throws JsonParseException if the file content is not valid JSON
+     * @throws NullPointerException if path or charset is null
+     */
+    public static JsonValue read(Path path, Charset charset) throws IOException {
+        Objects.requireNonNull(path, "path");
+        Objects.requireNonNull(charset, "charset");
+        return parse(Files.readString(path, charset));
+    }
+
+    /**
      * Serializes a JSON value to compact JSON text.
      *
      * @param value the value to serialize
@@ -66,6 +106,44 @@ public final class Json {
     }
 
     /**
+     * Writes a JSON value as compact UTF-8 JSON text to a file.
+     *
+     * <p>This is a convenience wrapper around {@link Files#newBufferedWriter(Path, Charset)}
+     * and {@link #write(JsonValue, Appendable)}.</p>
+     *
+     * @param value the value to serialize
+     * @param path the file to write
+     * @throws IOException if writing fails
+     * @throws NullPointerException if value or path is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static void writeFile(JsonValue value, Path path) throws IOException {
+        writeFile(value, path, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Writes a JSON value as compact JSON text to a file with the given charset.
+     *
+     * <p>This is a convenience wrapper around {@link Files#newBufferedWriter(Path, Charset)}
+     * and {@link #write(JsonValue, Appendable)}.</p>
+     *
+     * @param value the value to serialize
+     * @param path the file to write
+     * @param charset the charset used to encode the file
+     * @throws IOException if writing fails
+     * @throws NullPointerException if value, path, or charset is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static void writeFile(JsonValue value, Path path, Charset charset) throws IOException {
+        Objects.requireNonNull(value, "value");
+        Objects.requireNonNull(path, "path");
+        Objects.requireNonNull(charset, "charset");
+        try (var out = Files.newBufferedWriter(path, charset)) {
+            write(value, out);
+        }
+    }
+
+    /**
      * Serializes a JSON value to human-readable JSON text.
      *
      * @param value the value to serialize
@@ -88,6 +166,44 @@ public final class Json {
      */
     public static void writePretty(JsonValue value, Appendable out) throws IOException {
         JsonSerializer.writePretty(value, out);
+    }
+
+    /**
+     * Writes a JSON value as pretty UTF-8 JSON text to a file.
+     *
+     * <p>This is a convenience wrapper around {@link Files#newBufferedWriter(Path, Charset)}
+     * and {@link #writePretty(JsonValue, Appendable)}.</p>
+     *
+     * @param value the value to serialize
+     * @param path the file to write
+     * @throws IOException if writing fails
+     * @throws NullPointerException if value or path is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static void writePrettyFile(JsonValue value, Path path) throws IOException {
+        writePrettyFile(value, path, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Writes a JSON value as pretty JSON text to a file with the given charset.
+     *
+     * <p>This is a convenience wrapper around {@link Files#newBufferedWriter(Path, Charset)}
+     * and {@link #writePretty(JsonValue, Appendable)}.</p>
+     *
+     * @param value the value to serialize
+     * @param path the file to write
+     * @param charset the charset used to encode the file
+     * @throws IOException if writing fails
+     * @throws NullPointerException if value, path, or charset is null
+     * @throws IllegalArgumentException if the value contains invalid internal state
+     */
+    public static void writePrettyFile(JsonValue value, Path path, Charset charset) throws IOException {
+        Objects.requireNonNull(value, "value");
+        Objects.requireNonNull(path, "path");
+        Objects.requireNonNull(charset, "charset");
+        try (var out = Files.newBufferedWriter(path, charset)) {
+            writePretty(value, out);
+        }
     }
 
     /**

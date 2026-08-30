@@ -100,7 +100,7 @@ substitutions appear in the main list. Future substitutions are listed separatel
 
 **Verifiable in:** [`src/main/java/com/jvalue/JsonParser.java`](src/main/java/com/jvalue/JsonParser.java), [`src/main/java/com/jvalue/CharSource.java`](src/main/java/com/jvalue/CharSource.java), [`src/main/java/com/jvalue/JsonParseException.java`](src/main/java/com/jvalue/JsonParseException.java)
 
-**Tradeoff:** No streaming/incremental parsing (Phase 7 candidate). No `Reader`-based input yet (Phase 6). Handles only `String` input. Does not support POJO deserialization like Jackson's `ObjectMapper`. The parser is strict RFC 8259: it rejects lone surrogates, unescaped control characters, leading zeros, and trailing data.
+**Tradeoff:** No streaming/incremental parsing (Phase 7 candidate). The parser itself handles `String` input; file convenience APIs read the complete file into memory before delegating to it. Does not support POJO deserialization like Jackson's `ObjectMapper`. The parser is strict RFC 8259: it rejects lone surrogates, unescaped control characters, leading zeros, and trailing data.
 
 ---
 
@@ -155,7 +155,7 @@ substitutions appear in the main list. Future substitutions are listed separatel
 
 **Verifiable in:** [`src/main/java/com/jvalue/JsonSerializer.java`](src/main/java/com/jvalue/JsonSerializer.java), [`src/test/java/com/jvalue/JsonSerializerTest.java`](src/test/java/com/jvalue/JsonSerializerTest.java)
 
-**Tradeoff:** This entry covers tree serialization only. It does not provide Jackson/Gson-style object binding, streaming token APIs, configurable escaping, schema support, or file convenience methods. Public file convenience APIs remain future work.
+**Tradeoff:** This entry covers tree serialization only. It does not provide Jackson/Gson-style object binding, streaming token APIs, configurable escaping, or schema support.
 
 ---
 
@@ -177,6 +177,24 @@ substitutions appear in the main list. Future substitutions are listed separatel
 
 ---
 
+### 10. JSON File Convenience APIs - Apache Commons IO / Jackson File Helpers -> `java.nio.file.Files`
+
+**Problem:** Read JSON from files and write JSON back to files without requiring callers to install file utility packages or JSON library convenience wrappers.
+
+**Normally:** Apache Commons IO (`FileUtils.readFileToString`, `FileUtils.writeStringToFile`) for simple file text operations, or Jackson/Gson file-oriented helpers layered on their parsers and writers.
+
+**Instead:** Public `Json.read(...)`, `Json.writeFile(...)`, and `Json.writePrettyFile(...)` methods implemented with JDK file APIs and the existing JValue parser/serializer.
+
+**How:** `Json.read(Path, Charset)` decodes a whole file with `Files.readString(path, charset)` and delegates to `Json.parse(String)`. `Json.writeFile(JsonValue, Path, Charset)` and `Json.writePrettyFile(JsonValue, Path, Charset)` open a buffered writer with `Files.newBufferedWriter(path, charset)` and delegate to `Json.write(...)` or `Json.writePretty(...)`. UTF-8 overloads use `StandardCharsets.UTF_8`.
+
+**JDK APIs used:** `java.nio.file.Files`, `java.nio.file.Path`, `java.nio.charset.Charset`, `java.nio.charset.StandardCharsets`.
+
+**Verifiable in:** [`src/main/java/com/jvalue/Json.java`](src/main/java/com/jvalue/Json.java), [`src/test/java/com/jvalue/test/JsonFileApiTest.java`](src/test/java/com/jvalue/test/JsonFileApiTest.java)
+
+**Tradeoff:** These are convenience APIs, not streaming APIs. They read or write complete JSON documents and do not create parent directories or perform atomic replacement. File input preserves the existing parser policy; a leading BOM is not stripped before parsing.
+
+---
+
 
 ## Planned Substitutions - NOT IMPLEMENTED
 
@@ -186,7 +204,6 @@ These entries are planning notes only. They are not implemented, do not constitu
 
 | What | Replaces | Candidate JDK API |
 |---|---|---|
-| File I/O | Apache Commons IO | `java.nio.file.Files`, `java.nio.file.Path`
 | Data carrier objects | Lombok `@Value` | Java records (Java 16+)
 | JSON Pointer (RFC 6901) | Jackson `JsonPointer` / `json-pointer` lib | `String.split()`, `Integer.parseInt()`, `String.replace()`
 

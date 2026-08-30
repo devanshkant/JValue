@@ -5,8 +5,8 @@
 JValue is a lightweight JSON toolkit for Java 25, built for ZeroDepsHack 2026
 Track B: Parsers & Data Formats. It provides an explicit JSON value model,
 strict RFC 8259 parsing, compact serialization, and fixed-format pretty
-serialization without Jackson, Gson, Maven, Gradle, or any third-party runtime
-dependency.
+serialization, plus file convenience APIs, without Jackson, Gson, Maven,
+Gradle, or any third-party runtime dependency.
 
 It is not intended to replace the full feature set of Jackson or Gson. The goal
 is a focused, dependency-free tree parser and serializer for lightweight JSON
@@ -38,6 +38,9 @@ by hand using Java 25 and standard JDK APIs only.
 - Compact serialization with `Json.stringify(...)`.
 - Pretty serialization with `Json.stringifyPretty(...)`.
 - Appendable-based output with `Json.write(...)` and `Json.writePretty(...)`.
+- UTF-8 file convenience APIs with `Json.read(...)`, `Json.writeFile(...)`,
+  and `Json.writePrettyFile(...)`.
+- Explicit charset overloads for file reading and writing.
 - Object iteration order preservation for predictable serialization.
 - Hand-written tests plus JSONTestSuite conformance coverage.
 
@@ -63,6 +66,10 @@ String firstFeature = obj.getArray("features").getString(0);
 
 String compact = Json.stringify(value);
 String pretty = Json.stringifyPretty(value);
+
+Path path = Path.of("example.json");
+Json.writePrettyFile(value, path);
+JsonValue fromFile = Json.read(path);
 ```
 
 ## Serialization
@@ -99,6 +106,20 @@ StringBuilder prettyOut = new StringBuilder();
 Json.writePretty(value, prettyOut);
 ```
 
+For files, use the `Path` convenience APIs. UTF-8 is the default, and explicit
+charset overloads are available when needed:
+
+```java
+Path path = Path.of("data.json");
+
+JsonValue value = Json.read(path);
+Json.writeFile(value, path);
+Json.writePrettyFile(value, path);
+
+JsonValue latin1 = Json.read(path, StandardCharsets.ISO_8859_1);
+Json.writeFile(latin1, path, StandardCharsets.ISO_8859_1);
+```
+
 Numbers are serialized from `JsonNumber.raw()` so parsed numeric spellings such
 as `-0`, `1.0`, `1e0`, and `1E0` are preserved.
 
@@ -122,6 +143,10 @@ Serialization throws `NullPointerException` for Java `null` inputs and
 `IllegalArgumentException` if a manually constructed value contains invalid
 internal state, such as an invalid raw number or a lone surrogate code unit in a
 string.
+
+File APIs propagate `IOException` from JDK file operations. File reading does
+not strip a UTF-8 BOM; it preserves the existing parser policy, so a leading
+U+FEFF is rejected as an invalid JSON starting character.
 
 ## Supported JSON Behavior
 
@@ -157,7 +182,7 @@ JSONTestSuite `test_parsing` corpus when present locally.
 
 Current verified results:
 
-- Hand-written tests: 121 passed, 0 failed, 0 errors.
+- Hand-written tests: 136 passed, 0 failed, 0 errors.
 - JSONTestSuite: 305 passed, 0 failed, 13 skipped.
 
 The skipped JSONTestSuite cases are byte-level encoding cases that are not
@@ -176,10 +201,10 @@ This project has zero third-party production dependencies.
 ## Limitations
 
 - JSON Pointer is not implemented.
-- Production file I/O convenience APIs are not implemented.
 - Reader/InputStream parsing is not implemented.
-- Parsing currently accepts `String` input only.
+- File APIs read whole files into memory before parsing.
 - Serialization is tree-based, not streaming from arbitrary Java objects.
+- File APIs do not create parent directories automatically.
 - There is no POJO binding, schema validation, comments, JSON5, YAML, or TOML.
 
 ## STDLIB.md

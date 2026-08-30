@@ -23,6 +23,7 @@ public final class TestRunner {
         runTest("Smoke test", TestRunner::smokeTest);
         JsonValueTest.runAll();
         JsonParserTest.runAll();
+        JsonFileApiTest.runAll();
         com.jvalue.JsonSerializerTest.runAll();
         JsonConformanceTest.runAll();
 
