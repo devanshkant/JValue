@@ -1,7 +1,8 @@
 # STDLIB.md — Standard-Library Substitutions
 
-This document records every case where JValue uses the Java standard library (`java.base` module)
-instead of a third-party dependency that a typical Java developer would reach for.
+This document records every case where JValue uses the Java standard library instead of a
+third-party dependency that a typical Java developer would reach for. Current production
+classes depend only on `java.base`; test-support utilities may use other JDK modules.
 
 Each entry names the third-party package that would normally be used, the JDK API used instead,
 and a brief explanation of the substitution.
@@ -110,6 +111,23 @@ substitutions appear in the main list. Future substitutions are listed separatel
 ---
 
 
+### 7. Test Corpus Fetching - git submodule / curl / wget -> JDK HTTP and ZIP APIs
+
+**Normally:** A git submodule, `git clone`, `curl`, `wget`, or a build-tool plugin to fetch an external conformance corpus.
+
+**Instead:** A small JDK-only test-support utility in `FetchCorpus.java`.
+
+**How:** `FetchCorpus` downloads the JSONTestSuite archive with `java.net.http.HttpClient`, reads the response into bytes, extracts it with `java.util.zip.ZipInputStream`, and writes files with `java.nio.file.Files`. The downloaded corpus is ignored by Git and is not part of the production artifact.
+
+**JDK APIs used:** `java.net.http.HttpClient`, `java.net.http.HttpRequest`, `java.net.http.HttpResponse`, `java.util.zip.ZipInputStream`, `java.util.zip.ZipEntry`, `java.nio.file.Files`, `java.nio.file.Path`.
+
+**Verifiable in:** [`src/test/java/com/jvalue/test/FetchCorpus.java`](src/test/java/com/jvalue/test/FetchCorpus.java)
+
+**Tradeoff:** This is test/support infrastructure only. It is not a runtime feature of the JSON library and does not change the production dependency proof.
+
+---
+
+
 ## Planned Substitutions - NOT IMPLEMENTED
 
 The following substitutions are planned but not yet implemented. They will be moved to the main
@@ -132,4 +150,3 @@ These entries are planning notes only. They are not implemented, do not constitu
 
 *This document is maintained continuously during development. Every substitution in the main list
 is implemented and verifiable in the current source code.*
-

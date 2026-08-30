@@ -30,6 +30,7 @@ cmd_test() {
     cmd_build
 
     echo "[JValue] Compiling tests..."
+    rm -rf "$TEST_OUT"
     mkdir -p "$TEST_OUT"
 
     TEST_SRCS=$(find "$TEST_DIR" -name '*.java' 2>/dev/null)
@@ -38,12 +39,14 @@ cmd_test() {
         return 0
     fi
 
-    $JAVAC $JAVAC_OPTS -cp "$MAIN_OUT" -d "$TEST_OUT" $TEST_SRCS
+    # Compile main and test sources together into a fresh test output tree.
+    # This keeps verification independent from any stale class files.
+    $JAVAC $JAVAC_OPTS -d "$TEST_OUT" $SOURCES $TEST_SRCS
     echo "[JValue] Fetching JSONTestSuite corpus (if needed)..."
-    $JAVA -cp "$MAIN_OUT:$TEST_OUT" com.jvalue.test.FetchCorpus
+    $JAVA -cp "$TEST_OUT" com.jvalue.test.FetchCorpus
     
     echo "[JValue] Running tests..."
-    $JAVA -cp "$MAIN_OUT:$TEST_OUT" com.jvalue.test.TestRunner
+    $JAVA -cp "$TEST_OUT" com.jvalue.test.TestRunner
     echo "[OK] All tests passed."
 }
 

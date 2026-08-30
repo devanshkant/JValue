@@ -54,6 +54,7 @@ call :build
 if errorlevel 1 exit /b 1
 
 echo [JValue] Compiling tests...
+if exist "%TEST_OUT%" rmdir /s /q "%TEST_OUT%"
 if not exist "%TEST_OUT%" mkdir "%TEST_OUT%"
 
 REM Collect all .java files from src/test/java
@@ -65,17 +66,20 @@ if "!TEST_SRCS!"=="" (
     exit /b 0
 )
 
-%JAVAC% %JAVAC_OPTS% -cp %MAIN_OUT% -d %TEST_OUT% !TEST_SRCS!
+REM Compile main and test sources together into a fresh test output tree.
+REM This avoids relying on stale test classes and gives javac direct access to
+REM the project source graph during verification.
+%JAVAC% %JAVAC_OPTS% -d %TEST_OUT% !SOURCES! !TEST_SRCS!
 if errorlevel 1 (
     echo [FAIL] Test compilation failed.
     exit /b 1
 )
 
 echo [JValue] Fetching JSONTestSuite corpus (if needed)...
-%JAVA% -cp "%MAIN_OUT%;%TEST_OUT%" com.jvalue.test.FetchCorpus
+%JAVA% -cp "%TEST_OUT%" com.jvalue.test.FetchCorpus
 
 echo [JValue] Running tests...
-%JAVA% -cp "%MAIN_OUT%;%TEST_OUT%" com.jvalue.test.TestRunner
+%JAVA% -cp "%TEST_OUT%" com.jvalue.test.TestRunner
 if errorlevel 1 (
     echo [FAIL] Tests failed.
     exit /b 1

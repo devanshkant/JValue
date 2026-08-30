@@ -1,128 +1,110 @@
-# JValue — Zero-Dependency JSON Toolkit for Java 25
+# JValue - Zero-Dependency JSON Toolkit for Java 25
 
-> The JSON parser the JDK doesn't ship.
+> The JSON parser the JDK does not ship.
 
-[![Track B — Parsers & Data Formats](https://img.shields.io/badge/Track-B%20%E2%80%94%20Parsers%20%26%20Data%20Formats-blue)]()
-[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen)]()
-[![Java 25](https://img.shields.io/badge/Java-25%20LTS-orange)]()
+JValue is a lightweight, dependency-free JSON toolkit for Java 25, built for
+ZeroDepsHack 2026 Track B: Parsers & Data Formats.
 
-## What It Does
+## Current Features
 
-JValue is a lightweight, dependency-free JSON toolkit for Java 25. It provides:
+- Parsing: RFC 8259 JSON parser with detailed errors: line, column, and offset.
+- JSON value model: sealed hierarchy for object, array, string, number, boolean, and null.
+- Number fidelity: JSON numbers preserve their original lexical representation.
+- Validation coverage: hand-written unit tests plus JSONTestSuite conformance checks.
 
-- **Parsing** — Full RFC 8259 JSON parser with detailed error messages (line, column, offset)
-- **JSON Value Model** — Type-safe sealed hierarchy: `JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBoolean`, `JsonNull`
-- **Serialization** — Compact and pretty-printed JSON output with correct escaping
-- **JSON Pointer** — RFC 6901 deep access into JSON structures
-- **File I/O** — Read from and write to files with a single call
+Planned future phases include serialization, JSON Pointer, and file I/O. They are not implemented yet.
 
-All built using only the Java standard library (`java.base` module). No Jackson. No Gson. No dependencies.
+All current production code uses only the Java standard library. No Jackson. No Gson. No dependencies.
 
 ## Why
 
-Java is the only major language in this hackathon without a built-in JSON implementation:
-
-| Language | JSON Support |
-|---|---|
-| JavaScript | `JSON.parse()` / `JSON.stringify()` |
-| Python | `json` module |
-| Go | `encoding/json` (v2 in 1.27) |
-| C# / .NET | `System.Text.Json` |
-| **Java** | **None** |
-
-Every Java project that touches JSON adds a third-party dependency. JValue is what the JDK should ship.
+Java's standard library does not provide a JSON implementation. Java developers commonly add
+third-party dependencies such as Jackson or Gson for parsing and serialization. JValue implements
+the core JSON tree parser by hand with JDK APIs only.
 
 ## Quick Start
 
 ```java
 import com.jvalue.*;
 
-// Parse JSON
 JsonValue value = Json.parse("""
     {
         "name": "JValue",
         "version": 1,
-        "features": ["parsing", "serialization", "json-pointer"],
+        "features": ["parsing", "value-model", "error-reporting"],
         "zeroDeps": true
     }
     """);
 
-// Access values
 JsonObject obj = value.asObject();
-String name = obj.getString("name");        // "JValue"
-int version = obj.getInt("version");        // 1
+String name = obj.getString("name");           // "JValue"
+int version = obj.getInt("version");           // 1
 boolean zeroDeps = obj.getBoolean("zeroDeps"); // true
+String firstFeature = obj.getArray("features").getString(0);
 
-// JSON Pointer (RFC 6901)
-JsonValue feature = value.at("/features/0"); // "parsing"
-
-// Pretty-print
-System.out.println(value.toJson(JsonWriteOptions.pretty()));
-
-// Build JSON programmatically
 JsonObject built = JsonObject.of(
-    "tool", "JValue",
-    "deps", 0
+    "tool", JsonValue.of("JValue"),
+    "deps", JsonValue.of(0)
 );
 ```
 
 ## Build & Run
 
-**Requirements:** Java 25 LTS (JDK 25.0.4+)
+Requirements: Java 25 LTS, tested with JDK 25.0.4.
 
 ```bash
 # Build
 ./build.sh build        # Unix/macOS
-build.bat build          # Windows
+build.bat build         # Windows
 
 # Run tests
-./build.sh test          # Unix/macOS
-build.bat test           # Windows
+./build.sh test         # Unix/macOS
+build.bat test          # Windows
 
-# Verify zero dependencies
-./build.sh deps-proof    # Unix/macOS
-build.bat deps-proof     # Windows
+# Verify zero production dependencies
+./build.sh deps-proof   # Unix/macOS
+build.bat deps-proof    # Windows
 ```
 
 No Maven. No Gradle. Just `javac`.
 
 ## Dependency Verification
 
-This project has **zero third-party dependencies**. Verification:
+This project has zero third-party production dependencies.
 
-1. There is no `pom.xml`, `build.gradle`, or dependency manifest
-2. All source files use only `java.base` module imports
-3. Run `build.bat deps-proof` (or `./build.sh deps-proof`) to confirm
-4. See [deps-proof.txt](deps-proof.txt) for the output
+1. There is no `pom.xml`, `build.gradle`, or runtime dependency manifest.
+2. Production source uses only JDK APIs.
+3. Run `build.bat deps-proof` or `./build.sh deps-proof` to confirm.
+4. See [deps-proof.txt](deps-proof.txt) for recorded proof output.
 
 ## Supported JSON Behavior
 
-<!-- TODO: Fill in after implementation -->
+Current parser behavior includes objects, arrays, strings, numbers, booleans, null, JSON whitespace,
+nested values, escape sequences, Unicode escapes, strict number grammar, duplicate object keys with
+last-value-wins semantics, and a nesting depth limit of 512.
 
 ## Error Handling
 
-<!-- TODO: Fill in after implementation -->
+Invalid JSON throws `JsonParseException`, which exposes `line()`, `column()`, and `offset()` in
+addition to a human-readable message.
 
 ## Testing
 
-<!-- TODO: Fill in after implementation -->
-
-## Architecture
-
-<!-- TODO: Fill in after implementation -->
+Tests use a hand-written harness because the JDK does not ship JUnit. The suite covers the value
+model, parser edge cases, error positions, depth limits, and the JSONTestSuite `test_parsing`
+corpus when present locally.
 
 ## Limitations
 
-<!-- TODO: Fill in after implementation -->
+- Serialization is not implemented yet.
+- JSON Pointer is not implemented yet.
+- File I/O convenience APIs are not implemented yet.
+- The parser currently accepts `String` input only.
 
 ## STDLIB.md
 
-See [STDLIB.md](STDLIB.md) for a detailed account of every standard-library substitution.
+See [STDLIB.md](STDLIB.md) for the standard-library substitution ledger.
 
 ## License
 
 MIT
-
----
-
-*Built for [ZeroDepsHack 2026](https://zerodepshack.com) — Track B: Parsers & Data Formats*
