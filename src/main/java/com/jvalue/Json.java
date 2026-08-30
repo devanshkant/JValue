@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * JValue — Zero-Dependency JSON Toolkit for Java 25.
@@ -204,6 +205,35 @@ public final class Json {
         try (var out = Files.newBufferedWriter(path, charset)) {
             writePretty(value, out);
         }
+    }
+
+    /**
+     * Resolves a JSON Pointer against a JSON value tree.
+     *
+     * @param root the root JSON value
+     * @param pointer the JSON Pointer string
+     * @return the value addressed by the pointer
+     * @throws NullPointerException if root or pointer is null
+     * @throws IllegalArgumentException if pointer is not valid RFC 6901 syntax
+     * @throws java.util.NoSuchElementException if the pointer does not resolve
+     */
+    public static JsonValue pointer(JsonValue root, String pointer) {
+        Objects.requireNonNull(root, "root");
+        return JsonPointer.compile(pointer).query(root);
+    }
+
+    /**
+     * Resolves a JSON Pointer against a JSON value tree.
+     *
+     * @param root the root JSON value
+     * @param pointer the JSON Pointer string
+     * @return the addressed value, or empty if the valid pointer does not resolve
+     * @throws NullPointerException if root or pointer is null
+     * @throws IllegalArgumentException if pointer is not valid RFC 6901 syntax
+     */
+    public static Optional<JsonValue> pointerOptional(JsonValue root, String pointer) {
+        Objects.requireNonNull(root, "root");
+        return JsonPointer.compile(pointer).queryOptional(root);
     }
 
     /**

@@ -24,6 +24,7 @@ public final class TestRunner {
         JsonValueTest.runAll();
         JsonParserTest.runAll();
         JsonFileApiTest.runAll();
+        JsonPointerTest.runAll();
         com.jvalue.JsonSerializerTest.runAll();
         JsonConformanceTest.runAll();
 

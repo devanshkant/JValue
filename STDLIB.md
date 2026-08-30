@@ -195,6 +195,24 @@ substitutions appear in the main list. Future substitutions are listed separatel
 
 ---
 
+### 11. JSON Pointer Navigation - Jackson `JsonPointer` / JSON Pointer Library -> JDK Collections and Strings
+
+**Problem:** Locate nested values inside a parsed JSON tree using the standard RFC 6901 JSON Pointer syntax without requiring callers to install a larger JSON library.
+
+**Normally:** Jackson's `com.fasterxml.jackson.core.JsonPointer`, Jackson tree traversal helpers, or a small standalone `json-pointer` library.
+
+**Instead:** A compact immutable `JsonPointer` value object implemented with JDK collections and string handling, layered over JValue's existing `JsonValue` tree.
+
+**How:** `JsonPointer.compile(String)` validates pointer syntax, preserves empty reference tokens, and decodes RFC 6901 escapes (`~0` and `~1`) in one pass. The compiled pointer stores decoded tokens in an immutable `List` and resolves them against `JsonObject` and `JsonArray` using the existing public tree APIs. Array index handling is implemented directly with character checks and overflow-safe integer accumulation.
+
+**JDK APIs used:** `java.lang.String`, `java.lang.StringBuilder`, `java.util.ArrayList`, `java.util.List`, `java.util.Optional`, `java.util.NoSuchElementException`, `java.util.Objects`.
+
+**Verifiable in:** [`src/main/java/com/jvalue/JsonPointer.java`](src/main/java/com/jvalue/JsonPointer.java), [`src/main/java/com/jvalue/Json.java`](src/main/java/com/jvalue/Json.java), [`src/test/java/com/jvalue/test/JsonPointerTest.java`](src/test/java/com/jvalue/test/JsonPointerTest.java)
+
+**Tradeoff:** This is read-only RFC 6901 lookup. It intentionally does not implement JSON Patch, mutation, wildcard queries, recursive descent, schema validation, or a broader query language.
+
+---
+
 
 ## Planned Substitutions - NOT IMPLEMENTED
 
@@ -205,7 +223,6 @@ These entries are planning notes only. They are not implemented, do not constitu
 | What | Replaces | Candidate JDK API |
 |---|---|---|
 | Data carrier objects | Lombok `@Value` | Java records (Java 16+)
-| JSON Pointer (RFC 6901) | Jackson `JsonPointer` / `json-pointer` lib | `String.split()`, `Integer.parseInt()`, `String.replace()`
 
 > **Note on `HexFormat`:** `java.util.HexFormat` (Java 17+) was considered for Unicode escape parsing
 > but the implementation uses direct hex digit conversion via a custom `hexDigit(char)` method, which

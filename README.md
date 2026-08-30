@@ -4,9 +4,9 @@
 
 JValue is a lightweight JSON toolkit for Java 25, built for ZeroDepsHack 2026
 Track B: Parsers & Data Formats. It provides an explicit JSON value model,
-strict RFC 8259 parsing, compact serialization, and fixed-format pretty
-serialization, plus file convenience APIs, without Jackson, Gson, Maven,
-Gradle, or any third-party runtime dependency.
+strict RFC 8259 parsing, compact serialization, fixed-format pretty
+serialization, JSON Pointer lookup, and file convenience APIs, without Jackson,
+Gson, Maven, Gradle, or any third-party runtime dependency.
 
 It is not intended to replace the full feature set of Jackson or Gson. The goal
 is a focused, dependency-free tree parser and serializer for lightweight JSON
@@ -40,6 +40,7 @@ by hand using Java 25 and standard JDK APIs only.
 - Appendable-based output with `Json.write(...)` and `Json.writePretty(...)`.
 - UTF-8 file convenience APIs with `Json.read(...)`, `Json.writeFile(...)`,
   and `Json.writePrettyFile(...)`.
+- Read-only JSON Pointer lookup with `JsonPointer` and `Json.pointer(...)`.
 - Explicit charset overloads for file reading and writing.
 - Object iteration order preservation for predictable serialization.
 - Hand-written tests plus JSONTestSuite conformance coverage.
@@ -66,11 +67,60 @@ String firstFeature = obj.getArray("features").getString(0);
 
 String compact = Json.stringify(value);
 String pretty = Json.stringifyPretty(value);
+String firstFeatureByPointer = Json.pointer(value, "/features/0").asString();
 
 Path path = Path.of("example.json");
 Json.writePrettyFile(value, path);
 JsonValue fromFile = Json.read(path);
 ```
+
+## JSON Pointer
+
+JValue supports read-only JSON Pointer lookup as defined by RFC 6901. A pointer
+is a compact string path into a parsed JSON tree:
+
+```java
+JsonValue document = Json.parse("""
+    {
+        "users": [
+            { "name": "Ada", "role": "admin" }
+        ],
+        "a/b": "slash key",
+        "m~n": "tilde key"
+    }
+    """);
+
+String name = Json.pointer(document, "/users/0/name").asString(); // "Ada"
+String slash = Json.pointer(document, "/a~1b").asString();        // "slash key"
+String tilde = Json.pointer(document, "/m~0n").asString();        // "tilde key"
+```
+
+The empty pointer `""` returns the root value itself. Non-empty pointers must
+start with `/`. Tokens are decoded using RFC 6901 escapes: `~1` means `/`, and
+`~0` means `~`. Object tokens are used exactly as decoded, so numeric-looking
+object keys such as `"0"` remain object keys. Array tokens must be `0` or a
+non-zero digit followed by digits; leading zeros, negative indexes, `+1`, `-`,
+non-numeric tokens, overflow, and out-of-bounds indexes do not resolve.
+
+Use `JsonPointer.compile(pointer)` when applying the same pointer repeatedly:
+
+```java
+JsonPointer pointer = JsonPointer.compile("/users/0/role");
+JsonValue role = pointer.query(document);
+```
+
+Missing targets throw `NoSuchElementException` from required lookup APIs and
+return `Optional.empty()` from optional lookup APIs:
+
+```java
+JsonValue required = Json.pointer(document, "/users/0/name");
+Optional<JsonValue> maybe = Json.pointerOptional(document, "/users/1/name");
+```
+
+Malformed pointer syntax throws `IllegalArgumentException`, and Java `null`
+arguments throw `NullPointerException`. JSON Pointer support is lookup-only:
+there is no JSON Patch, mutation, wildcard query, recursive descent, or schema
+validation.
 
 ## Serialization
 
@@ -148,12 +198,17 @@ File APIs propagate `IOException` from JDK file operations. File reading does
 not strip a UTF-8 BOM; it preserves the existing parser policy, so a leading
 U+FEFF is rejected as an invalid JSON starting character.
 
+JSON Pointer lookup throws `IllegalArgumentException` for malformed pointer
+syntax. A syntactically valid pointer that cannot be resolved throws
+`NoSuchElementException` from `query(...)` / `Json.pointer(...)`, or returns
+`Optional.empty()` from `queryOptional(...)` / `Json.pointerOptional(...)`.
+
 ## Supported JSON Behavior
 
 JValue supports JSON objects, arrays, strings, numbers, booleans, null, JSON
 whitespace, nested values, escape sequences, Unicode escapes, strict number
-grammar, duplicate object keys with last-value-wins semantics, and a nesting
-depth limit of 512.
+grammar, duplicate object keys with last-value-wins semantics, a nesting depth
+limit of 512, and read-only RFC 6901 JSON Pointer lookup.
 
 ## Build & Run
 
@@ -177,12 +232,12 @@ No Maven. No Gradle. Just `javac`.
 
 Tests use a hand-written harness because the JDK does not ship JUnit. The suite
 covers the value model, parser edge cases, error positions, depth limits,
-serialization, pretty printing, Appendable output, round trips, and the
-JSONTestSuite `test_parsing` corpus when present locally.
+serialization, pretty printing, Appendable output, JSON Pointer lookup, round
+trips, and the JSONTestSuite `test_parsing` corpus when present locally.
 
 Current verified results:
 
-- Hand-written tests: 136 passed, 0 failed, 0 errors.
+- Hand-written tests: 171 passed, 0 failed, 0 errors.
 - JSONTestSuite: 305 passed, 0 failed, 13 skipped.
 
 The skipped JSONTestSuite cases are byte-level encoding cases that are not
@@ -200,7 +255,7 @@ This project has zero third-party production dependencies.
 
 ## Limitations
 
-- JSON Pointer is not implemented.
+- JSON Pointer support is read-only lookup; JSON Patch and mutation are not implemented.
 - Reader/InputStream parsing is not implemented.
 - File APIs read whole files into memory before parsing.
 - Serialization is tree-based, not streaming from arbitrary Java objects.
