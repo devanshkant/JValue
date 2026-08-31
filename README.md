@@ -65,8 +65,8 @@ build.bat deps-proof    # Windows
 No Maven. No Gradle. Just `javac`.
 
 ## Quick Start (CLI)
-
-The primary way to try the tool is via the included CLI wrapper. It provides validation, formatting, pointer lookups, and more.
+First build the project using the commands in the Build & Run section above.
+After a successful build, use the CLI wrapper to validate, format, and inspect JSON files.
 
 ```bash
 $ ./jv.sh validate demo/data/users.json
