@@ -19,9 +19,17 @@ TOTAL: 185 checks
 
 Java 25 must be on PATH. If you get "java 23" from `java --version`, run this first in each terminal:
 
+**Windows (PowerShell)**:
 ```powershell
 $env:JAVA_HOME = "D:\Downloads\jdk-25.0.4_windows-x64_bin\jdk-25.0.4"
 $env:PATH = "$env:JAVA_HOME\bin;" + $env:PATH
+java --version   # Should show: java 25.0.4
+```
+
+**Linux / macOS (Bash)**:
+```bash
+export JAVA_HOME="/path/to/jdk-25.0.4"
+export PATH="$JAVA_HOME/bin:$PATH"
 java --version   # Should show: java 25.0.4
 ```
 
@@ -29,9 +37,16 @@ java --version   # Should show: java 25.0.4
 
 ## Step 1 — Build the main library
 
+**Windows**:
 ```powershell
 cd d:\JValue\JValue
 .\build.bat build
+```
+
+**Linux / macOS**:
+```bash
+cd /path/to/JValue
+./build.sh build
 ```
 
 Expected:
@@ -44,9 +59,16 @@ Expected:
 
 ## Step 2 — Compile the demo
 
+**Windows**:
 ```powershell
 New-Item -ItemType Directory -Force demo\classes
 javac --release 25 -cp "build\classes" -d "demo\classes" "demo\ManualDemo.java"
+```
+
+**Linux / macOS**:
+```bash
+mkdir -p demo/classes
+javac --release 25 -cp "build/classes" -d "demo/classes" "demo/ManualDemo.java"
 ```
 
 Expected: No errors, silent success.
@@ -55,8 +77,14 @@ Expected: No errors, silent success.
 
 ## Step 3 — Run the demo
 
+**Windows**:
 ```powershell
 java -cp "build\classes;demo\classes" ManualDemo
+```
+
+**Linux / macOS**:
+```bash
+java -cp "build/classes:demo/classes" ManualDemo
 ```
 
 Expected final lines:
@@ -70,8 +98,14 @@ Expected final lines:
 
 ## One-liner (all 3 steps together)
 
+**Windows**:
 ```powershell
 $env:JAVA_HOME = "D:\Downloads\jdk-25.0.4_windows-x64_bin\jdk-25.0.4"; $env:PATH = "$env:JAVA_HOME\bin;" + $env:PATH; .\build.bat build; New-Item -Force -ItemType Directory demo\classes | Out-Null; javac --release 25 -cp "build\classes" -d "demo\classes" "demo\ManualDemo.java"; java -cp "build\classes;demo\classes" ManualDemo
+```
+
+**Linux / macOS**:
+```bash
+export JAVA_HOME="/path/to/jdk-25.0.4"; export PATH="$JAVA_HOME/bin:$PATH"; ./build.sh build; mkdir -p demo/classes; javac --release 25 -cp "build/classes" -d "demo/classes" "demo/ManualDemo.java"; java -cp "build/classes:demo/classes" ManualDemo
 ```
 
 ---
@@ -91,6 +125,12 @@ After running, check these in `demo\output\`:
 
 ## Run the official automated test suite (186 tests + 305 conformance)
 
+**Windows**:
 ```powershell
 .\build.bat test
+```
+
+**Linux / macOS**:
+```bash
+./build.sh test
 ```
