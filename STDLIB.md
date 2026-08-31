@@ -213,6 +213,24 @@ substitutions appear in the main list. Future substitutions are listed separatel
 
 ---
 
+### 12. CLI Argument Parsing — picocli / Commons CLI → `String[] args`
+
+**Problem:** Provide a feature-rich CLI wrapper without adding an argument-parsing library.
+
+**Normally:** `info.picocli` (picocli) or `org.apache.commons.cli` for parsing flags, subcommands, and generating help menus.
+
+**Instead:** Hand-written parsing using the native `String[] args` passed to `main()`.
+
+**How:** `JValueCli.main(String[] args)` switches on `args[0]` using a Java 21+ `switch` expression to route to specific subcommand methods (e.g., `cmdValidate`, `cmdPretty`). Each method checks `args.length` and extracts required positional arguments by index. Help text and ANSI color formatting are generated via `System.out.println` and `String.format`.
+
+**JDK APIs used:** `String[]`, `switch`, `System.out`, `System.exit`.
+
+**Verifiable in:** [`cli/JValueCli.java`](cli/JValueCli.java)
+
+**Tradeoff:** No automatic help generation, no long/short flag aliases (`--help` vs `-h`), and positional arguments are strictly ordered. This is a deliberate choice to keep the CLI wrapper dependency-free.
+
+---
+
 
 ## Planned Substitutions - NOT IMPLEMENTED
 

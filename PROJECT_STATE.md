@@ -90,6 +90,18 @@ The current implementation includes:
 * Optional lookup.
 * Explicit distinction between malformed pointers and valid-but-unresolved pointers.
 
+### Command-Line Interface (CLI)
+
+* Native wrapper scripts for Windows (`jv.bat`) and Unix/Linux/macOS (`jv.sh`).
+* `validate`: Parse a file/string and report exact line/column of errors.
+* `pretty` / `compact`: Format JSON.
+* `get`: RFC 6901 JSON Pointer lookup.
+* `inspect`: Tree-based type inspection.
+* `tomap`: Java type view.
+* `read` / `write`: File I/O.
+* `build` / `array`: Jackson-free JSON object/array builder from arguments.
+* `numinfo`: Numeric lexeme inspection.
+
 ### Reliability / Hardening
 
 * Parse → serialize → parse round-trip tests.
@@ -315,6 +327,13 @@ The primary project build/test interface is:
 build.bat build
 build.bat test
 build.bat deps-proof
+```
+
+The primary user-facing tool interface is the CLI wrapper:
+
+```text
+./jv.sh help
+./jv.sh validate <file>
 ```
 
 ---

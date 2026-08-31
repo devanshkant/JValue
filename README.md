@@ -44,8 +44,34 @@ by hand using Java 25 and standard JDK APIs only.
 - Explicit charset overloads for file reading and writing.
 - Object iteration order preservation for predictable serialization.
 - Hand-written tests plus JSONTestSuite conformance coverage.
+- Command-line interface (CLI) for validation, formatting, and JSON Pointer inspection.
 
-## Quick Start
+## Quick Start (CLI)
+
+The primary way to try the tool is via the included CLI wrapper. It provides validation, formatting, pointer lookups, and more.
+
+```bash
+$ ./jv.sh validate demo/data/users.json
+  (reading from file: /.../demo/data/users.json)
+  ✔  Valid JSON
+  Root type : object
+  Keys      : 3
+
+$ ./jv.sh get demo/data/users.json /users/0/name
+  (reading from file: /.../demo/data/users.json)
+  Pointer : /users/0/name
+  Type    : string
+  Value   : 
+"Ada Lovelace"
+
+$ ./jv.sh compact demo/data/users.json
+  (reading from file: /.../demo/data/users.json)
+  {"users":[{"id":1,"name":"Ada Lovelace","role":"admin","active":true,"score":99.5,"address":{"city":"London","country":"UK"},"tags":["math","programming","pioneer"]},{"id":2,"name":"Alan Turing","role":"member","active":false,"score":100.0,"address":{"city":"London","country":"UK"},"tags":["computing","cryptography"]}],"total":2,"page":1}
+```
+
+Windows users should use `.\jv.bat` instead of `./jv.sh`. Run `./jv.sh help` to see all 15 commands.
+
+## Quick Start (Java API)
 
 ```java
 import com.jvalue.*;
@@ -237,7 +263,7 @@ trips, and the JSONTestSuite `test_parsing` corpus when present locally.
 
 Current verified results:
 
-- Hand-written tests: 171 passed, 0 failed, 0 errors.
+- Hand-written tests: 186 passed, 0 failed, 0 errors.
 - JSONTestSuite: 305 passed, 0 failed, 13 skipped.
 
 The skipped JSONTestSuite cases are byte-level encoding cases that are not
