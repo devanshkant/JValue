@@ -17,5 +17,11 @@ extra/
 .DS_Store
 Thumbs.db
 
-# JSONTestSuite upstream corpus (downloaded during setup, not committed)
+# JSONTestSuite upstream corpus (downloaded at test time, not committed)
 test-data/JSONTestSuite/
+
+# Compiled demo and CLI output (generated at runtime, not committed)
+demo/classes/
+demo/output/
+cli/classes/
+cli/output_test.json

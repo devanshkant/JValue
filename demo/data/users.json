@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Ada Lovelace",
+      "role": "admin",
+      "active": true,
+      "score": 99.5,
+      "address": {
+        "city": "London",
+        "country": "UK"
+      },
+      "tags": ["math", "programming", "pioneer"]
+    },
+    {
+      "id": 2,
+      "name": "Alan Turing",
+      "role": "member",
+      "active": false,
+      "score": 100.0,
+      "address": {
+        "city": "London",
+        "country": "UK"
+      },
+      "tags": ["computing", "cryptography"]
+    }
+  ],
+  "total": 2,
+  "page": 1
+}

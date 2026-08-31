@@ -1,0 +1,13 @@
+{
+  "a/b": "slash key value",
+  "m~n": "tilde key value",
+  "c": {
+    "d": {
+      "e": "deep value"
+    }
+  },
+  "arr": [10, 20, 30, [40, 50]],
+  "empty_key": {
+    "": "empty string key value"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "plain": "hello world",
+  "empty": "",
+  "with_spaces": "  leading and trailing  ",
+  "escaped_quote": "She said \"hello\"",
+  "escaped_backslash": "C:\\Users\\demo",
+  "escaped_slash": "http:\/\/example.com",
+  "escaped_newline": "line1\nline2",
+  "escaped_tab": "col1\tcol2",
+  "escaped_carriage": "line\r",
+  "escaped_backspace": "back\bspace",
+  "escaped_formfeed": "form\ffeed",
+  "unicode_basic": "\u0041",
+  "unicode_emoji_surrogate": "\uD83D\uDE00",
+  "unicode_japanese": "\u65E5\u672C\u8A9E",
+  "key with spaces": "value",
+  "key/with/slashes": "slashval",
+  "key~with~tildes": "tildeval"
+}

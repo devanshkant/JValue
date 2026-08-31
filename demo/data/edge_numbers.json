@@ -1,0 +1,13 @@
+{
+  "integer": 42,
+  "negative": -7,
+  "zero": 0,
+  "negative_zero": -0,
+  "decimal": 3.14,
+  "exponent_lower": 1e10,
+  "exponent_upper": 2E5,
+  "neg_exponent": 1.5e-3,
+  "pos_exponent_sign": 1.5e+3,
+  "large": 9007199254740991,
+  "fraction_and_exp": 1.23e4
+}

@@ -1,0 +1,13 @@
+{
+  "name": "JValue",
+  "version": 1,
+  "stable": true,
+  "score": 9.8,
+  "license": "MIT",
+  "author": null,
+  "tags": ["parser", "json", "zero-deps"],
+  "meta": {
+    "track": "B",
+    "hackathon": "ZeroDepsHack 2026"
+  }
+}
