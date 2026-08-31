@@ -1,159 +1,109 @@
-# JValue Project State
+# JValue — Project State
 
-This document records the current verified state of JValue and serves as the persistent project-state and AI-agent handoff document.
+## Overview
 
-The repository is a ZeroDepsHack 2026 Track B submission targeting a lightweight, useful JSON toolkit for Java 25 using only the Java standard library at runtime.
+JValue is a lightweight JSON toolkit for Java 25 built entirely on the Java standard library, with **zero third-party runtime dependencies**.
 
-All phases through Phase 8 are currently implemented and verified. Phase 9 is the next planned engineering phase.
+It provides a complete tree-based workflow for working with JSON documents:
 
----
+```text
+JSON text / file
+      ↓
+   parsing
+      ↓
+ JsonValue tree
+      ↓
+pointer lookup / inspection
+      ↓
+serialization
+      ↓
+JSON text / file
+```
 
-## Project Overview
-
-**Project:** JValue
-**Language:** Java 25
-**Hackathon:** ZeroDepsHack 2026
-**Track:** B — Parsers & Data Formats
-
-JValue is a zero-third-party-runtime-dependency JSON toolkit for Java.
-
-The project exists around a simple gap in the Java platform:
-
-> The JDK provides many general-purpose building blocks but does not provide a complete JSON parsing, tree-model, serialization, file-convenience, or JSON Pointer toolkit.
-
-JValue implements those capabilities using only Java standard-library APIs and handwritten project code.
-
-### Runtime dependency policy
-
-Production code has no third-party runtime dependencies.
-
-Current dependency proof confirms that production classes depend only on `java.base`.
-
-The project does not use:
-
-* Jackson
-* Gson
-* JUnit
-* AssertJ
-* Hamcrest
-* Guava
-* Apache Commons
-* external JSON libraries
-* other third-party runtime libraries
-
-The build/test process uses JDK-provided tooling and the project's handwritten test infrastructure.
+The project is designed for developers who want practical JSON parsing and document manipulation without bringing a third-party JSON runtime into a project.
 
 ---
 
-## Phase Status
+## Current Implementation Status
 
-| Phase                                        | Status            | Evidence                                                                                   |
-| -------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------ |
-| Phase 1 — Project Skeleton                   | Frozen / complete | Repository structure, build scripts, README, STDLIB.md, `.zero-dep.toml`, dependency proof |
-| Phase 2 — JSON Value Model                   | Frozen / complete | `JsonValue` sealed hierarchy and value-model tests                                         |
-| Phase 3 — Core Parser                        | Frozen / complete | Recursive-descent parser, parser tests, JSONTestSuite conformance                          |
-| Phase 4 — Error Handling & Edge Cases        | Frozen / complete | Position-aware parse errors, malformed-input handling, depth limit, conformance            |
-| Phase 5 — Serialization                      | Frozen / complete | Compact/pretty serializer, public serialization APIs, serializer tests                     |
-| Phase 6 — File / Convenience APIs            | Frozen / complete | File read/write APIs, charset handling, file API tests                                     |
-| Phase 7 — JSON Pointer                       | Frozen / complete | RFC 6901 token parsing, traversal, public lookup APIs, pointer tests                       |
-| Phase 8 — Reliability & Hardening            | Frozen / complete | Round-trip, integration, stress, and reliability tests                                     |
-| Phase 9 — Performance / Benchmarking Review  | **Next**          | Not started                                                                                |
-| Phase 10 — Compliance / Bonus Audit          | Planned           | Not started                                                                                |
-| Phase 11 — Final Documentation / Demo Polish | Planned           | Not started                                                                                |
+The current implementation includes:
 
----
+### JSON Value Model
 
-## Architecture
-
-The project is intentionally layered and the completed phases should be treated as stable.
-
-### Value Model
-
-`JsonValue` is the sealed root of the JSON tree model.
-
-Concrete JSON values:
-
+* `JsonValue` sealed root type.
 * `JsonObject`
 * `JsonArray`
 * `JsonString`
 * `JsonNumber`
 * `JsonBoolean`
 * `JsonNull`
-
-Values are designed to preserve the project's established equality, immutability, ordering, and numeric-lexeme semantics.
+* immutable value semantics and predictable object iteration order.
 
 ### Parsing
 
-`JsonParser` implements recursive-descent parsing over Java `String` input.
-
-Supporting component:
-
-* `CharSource`
-
-Parse errors are represented by:
-
-* `JsonParseException`
-
-Parse errors include source position information such as:
-
-* character offset;
-* line;
-* column.
-
-The parser enforces a nesting depth limit of 512.
+* RFC 8259 JSON parsing from Java `String` input.
+* Recursive-descent parser.
+* Strict JSON number grammar.
+* Preservation of the original numeric lexeme.
+* JSON string escape handling.
+* Unicode escape handling.
+* Surrogate-pair validation.
+* Rejection of unescaped control characters.
+* Rejection of trailing non-whitespace data.
+* Duplicate-object-key policy: last value wins.
+* Detailed parse diagnostics with line, column, and character offset.
+* Maximum parser nesting depth of 512.
 
 ### Serialization
 
-`JsonSerializer` is package-private/internal.
+* Compact JSON serialization.
+* Pretty JSON serialization.
+* Fixed two-space indentation.
+* No trailing root newline.
+* Correct JSON string escaping.
+* Unicode handling.
+* Lone-surrogate rejection.
+* Raw numeric lexeme preservation.
+* Validation of invalid raw numeric values.
+* Object iteration-order preservation.
+* `Appendable` output support.
 
-Public serialization is exposed through `Json`:
+### File Convenience APIs
 
-* compact serialization;
-* pretty serialization;
-* `Appendable` output.
-
-Existing `toString()` behavior remains unchanged and is not the JSON serialization contract.
-
-### File / Convenience APIs
-
-File APIs are thin wrappers around the existing parser/serializer and JDK file APIs.
-
-They use JDK facilities such as:
-
-* `Path`
-* `Files`
-* `Charset`
-* `StandardCharsets`
-* `BufferedWriter`
-
-The file APIs do not implement a second parsing or serialization policy.
+* JSON file reading.
+* Compact JSON file writing.
+* Pretty JSON file writing.
+* UTF-8 default behavior.
+* Explicit `Charset` overloads.
+* `IOException` propagation.
+* File APIs reuse the existing parser and serializer rather than maintaining separate implementations.
 
 ### JSON Pointer
 
-`JsonPointer` implements read-only RFC 6901 lookup over the existing `JsonValue` tree.
+* Read-only RFC 6901 JSON Pointer support.
+* Compiled immutable pointers.
+* `~0` and `~1` token decoding.
+* Empty/root pointer.
+* Object member traversal.
+* Array index traversal.
+* Required lookup.
+* Optional lookup.
+* Explicit distinction between malformed pointers and valid-but-unresolved pointers.
 
-It provides:
+### Reliability / Hardening
 
-* pointer compilation;
-* RFC 6901 token decoding;
-* object traversal;
-* array traversal;
-* required lookup;
-* optional lookup.
-
-Pointer logic is separate from the parser, serializer, and file APIs.
-
-### Testing
-
-The project uses a handwritten JDK-only test harness.
-
-No JUnit or third-party testing framework is used.
-
-The project also includes a JSONTestSuite conformance harness.
+* Parse → serialize → parse round-trip tests.
+* Cross-feature integration tests.
+* Deep-nesting tests.
+* Large-collection tests.
+* Large-string tests.
+* Numeric edge-case tests.
+* Serialization and pointer regression tests.
+* Stress testing of parser and serializer boundaries.
 
 ---
 
-## Current Public API
+## Public API
 
 ```java
 Json.parse(String json)
@@ -189,130 +139,44 @@ Json.pointer(JsonValue root, String pointer)
 Json.pointerOptional(JsonValue root, String pointer)
 ```
 
-`JsonSerializer` remains an internal/package-private implementation detail.
+`JsonSerializer` is an internal/package-private implementation detail.
+
+Existing `toString()` behavior is intentionally unchanged; explicit serialization APIs define JSON output.
 
 ---
 
-## Implemented Features
+## Error and Lookup Semantics
 
 ### Parsing
 
-* RFC 8259 JSON parsing from `String`
-* JSON null, booleans, numbers, strings, arrays, and objects
-* strict JSON number grammar
-* lexical number preservation
-* string escape handling
-* Unicode escape handling
-* surrogate pair validation
-* rejection of unescaped control characters
-* detailed line/column/offset parse errors
-* 512-level parser nesting limit
-* duplicate object key behavior: last value wins
-* rejection of trailing non-whitespace data
-
-### Serialization
-
-* compact JSON serialization
-* pretty JSON serialization
-* fixed two-space indentation
-* no root trailing newline
-* JSON string escaping
-* Unicode handling
-* lone surrogate rejection
-* numeric raw-lexeme preservation
-* validation of invalid raw numbers
-* object iteration-order preservation
-* `Appendable` output support
-
-### File APIs
-
-* JSON file reading
-* compact JSON file writing
-* pretty JSON file writing
-* UTF-8 default behavior
-* explicit `Charset` overloads
-* `IOException` propagation
-* integration with the existing parser/serializer
-* BOM behavior intentionally remains consistent with the existing parser policy
+Malformed JSON produces `JsonParseException` with source-location information.
 
 ### JSON Pointer
 
-* RFC 6901 pointer parsing
-* empty root pointer
-* empty tokens
-* `~0` decoding
-* `~1` decoding
-* malformed escape rejection
-* object member traversal
-* array index traversal
-* strict array-index handling
-* out-of-bounds handling
-* scalar traversal failure handling
-* required and optional lookup semantics
-* read-only lookup only
-
-### Reliability / Hardening
-
-* parse → stringify → parse round-trip testing
-* cross-feature integration testing
-* deep nesting tests
-* large collection tests
-* large string tests
-* numerical edge-case testing
-* regression testing
-* stress testing of parser/serializer boundaries
-
----
-
-## Lookup / Error Semantics
-
-### JSON Pointer
-
-For pointer arguments:
-
-* `null` argument → `NullPointerException`
+* `null` arguments → `NullPointerException`
 * malformed pointer syntax → `IllegalArgumentException`
+* valid but unresolved required lookup → `NoSuchElementException`
+* valid but unresolved optional lookup → `Optional.empty()`
 
-For valid but unresolved pointers:
+The empty pointer `""` returns the root value unchanged.
 
-* required lookup → `NoSuchElementException`
-* optional lookup → `Optional.empty()`
-
-The empty pointer `""` resolves to the supplied root value unchanged.
-
-For arrays, valid indices are:
-
-* `0`
-* non-zero decimal integers without leading zeroes
-
-Invalid/unresolved examples include:
-
-* `01`
-* `-1`
-* `+1`
-* non-numeric tokens
-* `-`
-* out-of-bounds indices
-* values too large for the supported index range
-
-Numeric-looking tokens are treated as ordinary object keys when the current node is a `JsonObject`.
+Array indices follow strict decimal-index rules without leading zeroes except for `0`.
 
 ---
 
-## Testing / Verification Status
+## Verification Status
 
-### Current verified test result
+The final implementation has been repeatedly verified using a clean generated-build state.
 
-The most recent clean verification produced:
+### Handwritten test suite
 
 ```text
-Hand-written tests:
 186 passed
 0 failed
 0 errors
 ```
 
-JSONTestSuite:
+### JSONTestSuite
 
 ```text
 305 passed
@@ -320,11 +184,11 @@ JSONTestSuite:
 13 skipped
 ```
 
-The 13 skipped cases are outside the current parser's `String`-based input boundary and are documented by the project.
+The skipped cases concern byte-level encoding scenarios outside the current parser API boundary, which accepts Java `String` input rather than raw byte streams.
 
-### Clean build verification
+### Build
 
-The following commands have been verified successfully:
+The following commands succeed:
 
 ```text
 build.bat clean
@@ -335,202 +199,135 @@ build.bat deps-proof
 
 ### Dependency proof
 
-`jdeps` currently reports production classes depending only on:
+`jdeps` confirms that production classes depend only on:
 
 ```text
 java.base
 ```
 
-The dependency proof explicitly reports:
+The project therefore has:
 
 ```text
-Third-party dependencies: NONE
+Third-party runtime dependencies: NONE
 ```
 
-JDK modules currently used include standard `java.base` packages such as:
-
-* `java.io`
-* `java.lang`
-* `java.math`
-* `java.nio.charset`
-* `java.nio.file`
-* `java.util`
-
 ---
 
-## Phase 8 Reliability Results
+## Performance Review
 
-Phase 8 added:
+Performance was measured after functional correctness was established.
 
-* round-trip tests;
-* cross-feature integration tests;
-* stress tests.
+The benchmark harness is JDK-only and uses warmup plus repeated measurements with `System.nanoTime()`.
 
-Current examples include:
+Representative workloads include:
 
-* serializer behavior at depth 512;
-* serializer behavior beyond normal recursion depth;
-* arrays with tens of thousands of elements;
-* large object structures;
-* million-character strings;
-* parse/pointer/stringify integration;
-* file read/pointer/stringify integration;
-* file write/read/pointer/stringify integration.
-
-An intentionally extreme serializer test observed a `StackOverflowError` at depth 2000 and captures that behavior explicitly rather than treating it as successful arbitrary-depth support.
-
-The project does **not** claim support for arbitrary recursion depth.
-
-The stress suite is intended to characterize realistic behavior and expose regressions, not to guarantee arbitrary-size or arbitrary-depth input handling.
-
----
-
-## Standard Library Substitutions
-
-Implemented and documented in `STDLIB.md` include:
-
-* JUnit-style testing → handwritten JDK-only test harness and assertions
-* external JSON tree model → sealed `JsonValue` hierarchy
-* Jackson/Gson parsing → handwritten recursive-descent parser
-* Unicode helper libraries → JDK character/string facilities
-* external corpus-fetch utilities → JDK HTTP/archive/file APIs
-* Jackson/Gson serialization → handwritten serializer using JDK `StringBuilder` / `Appendable`
-* external pretty printers → depth-aware JDK-based formatter
-* external file utilities → `Files`, `Path`, `Charset`, and related JDK APIs
-* external JSON Pointer implementations → immutable JValue `JsonPointer` implementation using JDK types and the existing JSON tree
-
-Do not add artificial substitutions merely to increase the documented count.
-
----
-
-## Known Non-Blocking Issue
-
-`build.bat` currently emits a stray console line:
-
-```text
-'M' is not recognized as an internal or external command
-```
-
-before normal script output.
-
-Despite this, the relevant commands:
-
-* build;
-* test;
-* dependency proof
-
-complete successfully and return successful results.
-
-This is currently treated as a build-script polish issue rather than a functional blocker.
-
----
-
-## Not Implemented
-
-The following are intentionally outside the current implementation:
-
-* JSON Patch
-* JSON mutation APIs
-* wildcard / recursive query language
-* JSON Schema validation
-* POJO binding
-* Reader/InputStream convenience parsing
-* streaming object-to-JSON serialization
-* atomic file writes
-* arbitrary-depth guarantees
-* full Jackson/Gson feature parity
-
-Do not add these merely to increase feature count.
-
----
-
-## Remaining Planned Phases
-
-### Phase 9 — Performance / Benchmarking Review
-
-Focus on measuring and reviewing the performance characteristics of the completed toolkit.
-
-Potential areas:
-
-* parser throughput;
-* serializer throughput;
-* pretty serializer overhead;
-* file I/O;
+* small JSON documents;
+* medium documents;
+* approximately 1 MB documents;
+* compact serialization;
+* pretty serialization;
 * JSON Pointer lookup;
-* allocation-heavy cases;
-* moderate large-input behavior.
+* file I/O;
+* deep nesting;
+* large strings;
+* round-trip operations.
 
-Performance work should be evidence-driven.
+A candidate optimization replaced character-by-character pretty-print indentation with `String.repeat()`.
 
-Do not rewrite correct code merely to chase speculative optimizations.
+On the primary development machine, the replacement was measured to be slower for the tested workload, so it was reverted.
 
-### Phase 10 — Hackathon Compliance / Bonus Audit
+This is intentionally documented as a benchmark result rather than treated as a universal statement about JVM performance.
 
-Verify final submission requirements and bonus eligibility.
-
-Likely areas:
-
-* dependency proof;
-* `STDLIB.md`;
-* repository cleanliness;
-* required metadata;
-* reproducible build / other eligible bonuses if applicable;
-* honest feature claims.
-
-### Phase 11 — Final Documentation / Demo Polish
-
-Finalize:
-
-* README;
-* demo flow;
-* screenshots/video;
-* final project explanation;
-* write-up preparation;
-* final submission artifact review.
+The current implementation keeps the measured faster approach.
 
 ---
 
-## Engineering Rules for Future Work
+## Reliability Notes
 
-Treat Phases 1–8 as stable.
+The reliability suite verifies behavior at realistic large and deep inputs.
 
-Before changing an existing feature:
+The serializer was also tested beyond the normal supported recursion range. Extremely deep recursive serialization can eventually exhaust the JVM stack; the project does not claim arbitrary recursion depth.
 
-1. identify a concrete bug, missing requirement, or measurable improvement;
-2. add or identify evidence;
-3. make the smallest justified change;
-4. add regression coverage;
-5. rerun the relevant test suite;
-6. rerun the full verification when the phase requires it.
+The project therefore distinguishes between:
 
-Do not:
-
-* add third-party runtime dependencies;
-* weaken tests;
-* remove regression coverage;
-* duplicate parser/serializer/file logic;
-* redesign frozen APIs without a concrete reason;
-* inflate `STDLIB.md` with artificial substitutions;
-* claim support that has not been demonstrated;
-* expand a phase into later-phase functionality.
+* supported and tested operating ranges;
+* experimentally characterized stress limits;
+* unsupported arbitrary-size/arbitrary-depth guarantees.
 
 ---
 
-## Current State Summary
+## Standard Library Approach
+
+JValue intentionally avoids third-party JSON/runtime libraries and implements its required functionality using JDK APIs and project code.
+
+Examples include:
+
+* JSON tree representation → sealed Java value hierarchy;
+* JSON parsing → handwritten recursive-descent parser;
+* JSON serialization → handwritten serializer using `StringBuilder` / `Appendable`;
+* pretty printing → depth-aware traversal using JDK string/output facilities;
+* file utilities → `java.nio.file` and related JDK APIs;
+* JSON Pointer → compact immutable pointer parser and tree traversal;
+* testing infrastructure → handwritten JDK-only test harness.
+
+See `STDLIB.md` for the detailed substitution ledger and associated trade-offs.
+
+---
+
+## Known Limitations
+
+JValue intentionally does not attempt full feature parity with large general-purpose JSON frameworks.
+
+Not implemented:
+
+* JSON Patch;
+* JSON mutation APIs;
+* wildcard or recursive query languages;
+* JSON Schema validation;
+* POJO binding;
+* arbitrary-depth guarantees;
+* arbitrary-size guarantees;
+* streaming object-to-JSON serialization;
+* atomic file-write helpers;
+* general `Reader` / `InputStream` convenience parsing APIs.
+
+These omissions are deliberate scope choices rather than hidden dependencies.
+
+---
+
+## Build and Runtime Model
+
+The project uses the JDK directly.
+
+Build tooling:
 
 ```text
-Phase 1  ✅ Frozen
-Phase 2  ✅ Frozen
-Phase 3  ✅ Frozen
-Phase 4  ✅ Frozen
-Phase 5  ✅ Frozen
-Phase 6  ✅ Frozen
-Phase 7  ✅ Frozen
-Phase 8  ✅ Frozen
-
-Phase 9  → Next
-Phase 10 → Planned
-Phase 11 → Planned
+javac
+java
+jdeps
 ```
 
-The current repository is a verified Java 25, zero-third-party-runtime-dependency JSON toolkit with parsing, serialization, file convenience APIs, RFC 6901 read-only JSON Pointer support, and a 186-test reliability suite.
+No third-party runtime dependency is required.
+
+The primary project build/test interface is:
+
+```text
+build.bat build
+build.bat test
+build.bat deps-proof
+```
+
+---
+
+## Current Release State
+
+The implementation is functionally complete for its current intended scope and has passed:
+
+* the handwritten regression suite;
+* JSONTestSuite conformance checks;
+* clean build verification;
+* dependency verification;
+* reliability/stress testing;
+* performance review.
+
+Remaining work is limited to final submission presentation and documentation polish.

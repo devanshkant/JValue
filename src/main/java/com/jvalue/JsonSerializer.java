@@ -147,7 +147,8 @@ final class JsonSerializer {
     }
 
     private static void writeIndent(Appendable out, int depth) throws IOException {
-        for (int i = 0; i < depth * INDENT_WIDTH; i++) {
+        int spaces = depth * INDENT_WIDTH;
+        for (int i = 0; i < spaces; i++) {
             out.append(' ');
         }
     }
