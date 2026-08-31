@@ -46,6 +46,24 @@ by hand using Java 25 and standard JDK APIs only.
 - Hand-written tests plus JSONTestSuite conformance coverage.
 - Command-line interface (CLI) for validation, formatting, and JSON Pointer inspection.
 
+## Build & Run
+
+```bash
+# Build
+./build.sh build        # Unix/macOS
+build.bat build         # Windows
+
+# Run tests
+./build.sh test         # Unix/macOS
+build.bat test          # Windows
+
+# Verify zero production dependencies
+./build.sh deps-proof   # Unix/macOS
+build.bat deps-proof    # Windows
+```
+
+No Maven. No Gradle. Just `javac`.
+
 ## Quick Start (CLI)
 
 The primary way to try the tool is via the included CLI wrapper. It provides validation, formatting, pointer lookups, and more.
@@ -235,24 +253,6 @@ JValue supports JSON objects, arrays, strings, numbers, booleans, null, JSON
 whitespace, nested values, escape sequences, Unicode escapes, strict number
 grammar, duplicate object keys with last-value-wins semantics, a nesting depth
 limit of 512, and read-only RFC 6901 JSON Pointer lookup.
-
-## Build & Run
-
-```bash
-# Build
-./build.sh build        # Unix/macOS
-build.bat build         # Windows
-
-# Run tests
-./build.sh test         # Unix/macOS
-build.bat test          # Windows
-
-# Verify zero production dependencies
-./build.sh deps-proof   # Unix/macOS
-build.bat deps-proof    # Windows
-```
-
-No Maven. No Gradle. Just `javac`.
 
 ## Testing
 
